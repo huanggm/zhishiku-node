@@ -1,4 +1,4 @@
-const personalkey = '786bc817e6387618231f8a939143f27f62b9065f'
+const personalkey = 'df4afb416b7dba910e58852eb88cfc49709013e1'
 const Diff = require('diff')
 
 const Github = require('./github')
@@ -11,8 +11,9 @@ describe('github test', () => {
     expect(res).toHaveProperty('data')
   })
   
-  test('getContents', async () => {
-    const res = await github.getContents('huanggm', 'blogs', 'test/abcd.md')
+  test.only('getContents', async () => {
+    const res = await github.getContents('huanggm', 'learn-git', 'subdir/test.md')
+    console.log(res)
     expect(res).toHaveProperty('data')
   })
 
@@ -81,7 +82,7 @@ describe('github test', () => {
     console.log(newStr)
   })
 
-  test.only('diff test3', () => {
+  test('diff test3', () => {
     const oldStr = 'world'
     const patch = `@@ -0,0 +1,3 @@\n+test\n+ nihao\n+ hello`
     const newStr = Diff.applyPatch('', patch)

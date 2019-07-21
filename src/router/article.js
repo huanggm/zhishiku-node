@@ -13,7 +13,7 @@ const articleMetaUtils = require('../utils/articleMeta')
 
 const userUtils = require('../utils/user')
 
-const logger = require('../middleware/log4js').getLogger('router/project.js')
+const logger = require('../middleware/log4js').getLogger('router/article.js')
 
 const Octokit = require('@octokit/rest')
 
@@ -24,9 +24,9 @@ const Octokit = require('@octokit/rest')
 router.post(
   '/save',
   asyncHandler(async (req, res) => {
-    const { owner, token } = req.session
+    const { owner, access_token } = req.session
     const { article } = req.body
-    const octokit = Octokit({ auth: token })
+    const octokit = Octokit({ auth: access_token })
 
     const content = await octokit.repos.getContents({
       owner: article.owner,
@@ -51,18 +51,25 @@ router.post(
  * @必须登录
  */
 router.post(
-  '/delete',
+  '/deleteArticle',
   asyncHandler(async (req, res) => {
-    const { owner, token } = req.session
+    const { access_token } = req.session
     const { article } = req.body
-    const octokit = Octokit({ auth: token })
-    await octokit.repos.createOrUpdateFile(
+    const { owner, repo, path } = article
+    const octokit = Octokit({ auth: access_token })
+    const { data } = await octokit.repos.getContents({
       owner,
-      article.repo,
-      article.path,
-      `删除文章-${article.title}`,
-      article.sha
-    )
+      repo,
+      path,
+    })
+    const deleteResult = await octokit.repos.deleteFile({
+      owner,
+      repo,
+      path,
+      message: `删除文章-${path}`,
+      sha: data.sha,
+    })
+    logger.debug(deleteResult)
     res.succeed('ok')
   })
 )
@@ -94,6 +101,7 @@ router.get(
       page,
       pageSize
     )
+    logger.debug(total, typeof page, page,  page * pageSize + articles.length)
     res.succeed({
       hasMore: page * pageSize + articles.length < total,
       articles,
