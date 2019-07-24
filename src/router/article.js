@@ -22,26 +22,47 @@ const Octokit = require('@octokit/rest')
  * @必须登录
  */
 router.post(
-  '/save',
+  '/saveArticle',
   asyncHandler(async (req, res) => {
-    const { owner, access_token } = req.session
+    const { access_token } = req.session
     const { article } = req.body
+    const { owner, repo, path, oldPath, sha, content_str } = article
     const octokit = Octokit({ auth: access_token })
+    let found = null
+    try {
+      found = await octokit.repos.getContents({ owner, repo, path })
+      found = found.data
+    } catch(e) {
+      found = null
+    }
+    logger.debug('found', found, owner, repo, path, oldPath, sha, content_str)
+    if(sha) {
+      if(oldPath === path) {
+        //编辑文件
+        await articleUtils.createOrUpdateFile(octokit, owner, repo, path, content_str, found.sha)
+      } else {
+        //重命名文件-不能重名
+        if(found) {
+          throw new Error('文件重名冲突')
+        } else {
+          logger.debug(1)
+          await articleUtils.createOrUpdateFile(octokit, owner, repo, path, content_str)
+          logger.debug(2)
+          await articleUtils.deleteFile(octokit, owner, repo, oldPath)
+          logger.debug(3)
+        }
+      }
+    } else {
+      //新建文件-不能重名
+      if(found) {
+        throw new Error('文件重名冲突')
+      } else {
+        logger.debug(4)
+        await articleUtils.createOrUpdateFile(octokit, owner, repo, path, content_str)
+        logger.debug(5)
+      }
+    }
 
-    const content = await octokit.repos.getContents({
-      owner: article.owner,
-      repo: article.repo,
-      path: article.path,
-    })
-
-    await octokit.repos.createOrUpdateFile(
-      owner,
-      article.repo,
-      article.path,
-      `${article.sha ? '编辑' : '新增'}文章-${article.title}`,
-      articleUtils.encodeContent(article),
-      article.sha
-    )
     res.succeed('ok')
   })
 )
@@ -69,7 +90,6 @@ router.post(
       message: `删除文章-${path}`,
       sha: data.sha,
     })
-    logger.debug(deleteResult)
     res.succeed('ok')
   })
 )
@@ -78,10 +98,24 @@ router.post(
  * 获取文章详情
  */
 router.get(
-  '/getArticleById',
+  '/getOriginalArticle',
   asyncHandler(async (req, res) => {
-    const article = await ArticleModel.getArticleById(req.query.id)
-    res.succeed(article)
+    const { owner, repo, path } = req.query
+    const { access_token } = req.session
+
+    const octokit = Octokit({ auth: access_token })
+
+    const { data } = await octokit.repos.getContents({
+      owner,
+      repo,
+      path,
+    })
+
+    data.owner = owner
+    data.repo = repo
+    data.content_str = Buffer.from(data.content, 'base64').toString('utf-8')
+
+    res.succeed(data)
   })
 )
 
@@ -101,7 +135,6 @@ router.get(
       page,
       pageSize
     )
-    logger.debug(total, typeof page, page,  page * pageSize + articles.length)
     res.succeed({
       hasMore: page * pageSize + articles.length < total,
       articles,
