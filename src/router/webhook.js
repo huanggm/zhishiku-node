@@ -59,7 +59,6 @@ async function initRepo(octokit, userid, owner, repo) {
       const content = await zip.file(relativePath).async('string')
       articles.push({
         userid,
-        owner,
         repo,
         path: relativePath.slice(relativePath.indexOf('/') + 1),
         // tags: tags,
@@ -91,7 +90,6 @@ async function updateRepo(octokit, userid, owner, repo, base, head) {
       case 'added':
         await ArticleModel.create({
           userid,
-          owner,
           repo,
           path: file.filename,
           tags: [],
@@ -100,12 +98,11 @@ async function updateRepo(octokit, userid, owner, repo, base, head) {
         })
         break
       case 'removed':
-        await ArticleModel.deleteOne({userid, owner, repo, path: file.filename }).exec()
+        await ArticleModel.deleteOne({userid, repo, path: file.filename }).exec()
         break
       case 'modified':
         found = await ArticleModel.findOne({
           userid,
-          owner,
           repo,
           path: file.filename,
         }).exec()
@@ -115,7 +112,6 @@ async function updateRepo(octokit, userid, owner, repo, base, head) {
       case 'renamed':
         found = await ArticleModel.findOne({
           userid,
-          owner,
           repo,
           path: file.previous_filename,
         }).exec()

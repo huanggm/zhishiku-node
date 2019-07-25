@@ -9,10 +9,6 @@ const schema = new Schema(
       type: String,
       required: true,
     },
-    owner: {
-      type: String,
-      required: true,
-    },
     repo: {
       type: String,
       required: true,
@@ -21,8 +17,10 @@ const schema = new Schema(
       type: String,
       required: true,
     },
-    tags: [String],
+    original: String,
     content: String,
+    tags: [String],
+    imgs: [String],
     date: {
       type: Date,
       required: true,

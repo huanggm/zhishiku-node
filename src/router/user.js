@@ -134,7 +134,7 @@ router.post(
     if (found) {
       user.repos = user.repos.filter(r => r.id !== repo.id)
       await user.save()
-      await ArticleModel.deleteRepo(repo.owner.login, repo.name)
+      await ArticleModel.deleteRepo(req.session.userid, repo.name)
       const octokit = Octokit({ auth: req.session.access_token })
       await octokit.repos.deleteHook({
         owner: repo.owner.login,

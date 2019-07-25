@@ -3,19 +3,19 @@ const mongoose = require('./mongoose')
 const schema = require('./article.schema')
 
 /**
- * 初始化仓库
+ * 初始化仓库所有文章-首先删除文章
  */
-schema.statics.initRepo = async function(owner, repo, articles) {
-  await this.deleteRepo(owner, repo)
+schema.statics.initRepo = async function(userid, repo, articles) {
+  await this.deleteRepo(userid, repo)
   return this.insertMany(articles)
 }
 
 /**
- * 删除仓库
+ * 删除仓库所有文章
  */
-schema.statics.deleteRepo = function(owner, repo) {
+schema.statics.deleteRepo = function(userid, repo) {
   return this.deleteMany({
-    owner,
+    userid,
     repo,
   }).exec()
 }

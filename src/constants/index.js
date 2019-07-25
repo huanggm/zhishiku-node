@@ -5,4 +5,5 @@ module.exports = {
   CONNECT_FAILED: 3,
   CONNECT_ABORTING: 4,
   GITHUB: 1,
+  GITLAB: 2,
 }

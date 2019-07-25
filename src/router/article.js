@@ -120,6 +120,36 @@ router.get(
 )
 
 /**
+ * 获取文章详情
+ */
+router.get(
+  '/getArticle',
+  asyncHandler(async (req, res) => {
+    const { userid, repo, path } = req.query
+    const { access_token } = req.session
+    const user = UserModel.findById(userid).lean().exec()
+    const article = ArticleModel.findOne({
+      userid,
+      
+    })
+
+    const octokit = Octokit({ auth: access_token })
+
+    const { data } = await octokit.repos.getContents({
+      owner,
+      repo,
+      path,
+    })
+
+    data.owner = owner
+    data.repo = repo
+    data.content_str = Buffer.from(data.content, 'base64').toString('utf-8')
+
+    res.succeed(data)
+  })
+)
+
+/**
  * 获取某个用户的所有文章
  * @必须登录
  */
