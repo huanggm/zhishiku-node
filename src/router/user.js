@@ -104,7 +104,7 @@ router.post(
         owner: user.login,
         repo: repo.name,
         config: {
-          url: 'http://bc532495.ngrok.io/api/webhook',
+          url: 'http://18fb1cf8.ngrok.io/api/webhook',
           content_type: 'json',
           insecure_ssl: '0',
         },
